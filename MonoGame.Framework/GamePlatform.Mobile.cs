@@ -8,7 +8,7 @@ namespace Microsoft.Xna.Framework
 {
     partial class GamePlatform
     {
-        internal static GamePlatform PlatformCreate(Game game)
+        internal static GamePlatform PlatformCreate(Game game, IEmbedContext embedContext)
         {
 #if IOS
             return new iOSGamePlatform(game);
