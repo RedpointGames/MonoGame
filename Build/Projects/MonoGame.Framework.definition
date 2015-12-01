@@ -1139,7 +1139,7 @@
       <Platforms>Angle,Linux,WindowsGL</Platforms>
       <LogicalName>gamecontrollerdb.txt</LogicalName>
     </EmbeddedResource>
-
+    <Compile Include="Desktop\IEmbedContext.cs" />
 
     <!-- iOS Platform -->
     <Compile Include="iOS\Devices\Sensors\Accelerometer.cs">
@@ -1255,6 +1255,12 @@
       <Platforms>Windows</Platforms>
     </Compile>
     <Compile Include="Windows\WinFormsGameWindow.cs">
+      <Platforms>Windows</Platforms>
+    </Compile>
+    <Compile Include="Windows\WinEmbeddedGamePlatform.cs">
+      <Platforms>Windows</Platforms>
+    </Compile>
+    <Compile Include="Windows\WinEmbeddedGameWindow.cs">
       <Platforms>Windows</Platforms>
     </Compile>
     <Compile Include="Media\VideoSampleGrabber.cs">

@@ -12,14 +12,21 @@ namespace Microsoft.Xna.Framework
 {
     partial class GamePlatform
     {
-        internal static GamePlatform PlatformCreate(Game game)
+        internal static GamePlatform PlatformCreate(Game game, IEmbedContext embedContext)
         {
 #if MONOMAC
             return new MacGamePlatform(game);
 #elif DESKTOPGL || ANGLE
-            return new SdlGamePlatform(game);
+            return new SdlGamePlatform(game, embedContext);
 #elif WINDOWS && DIRECTX
-            return new MonoGame.Framework.WinFormsGamePlatform(game);
+            if (embedContext != null && embedContext.WindowHandle != IntPtr.Zero)
+            {
+                return new MonoGame.Framework.WinEmbeddedGamePlatform(game, embedContext);
+            }
+            else
+            {
+                return new MonoGame.Framework.WinFormsGamePlatform(game);
+            }
 #elif WINDOWS_UAP
             return new UAPGamePlatform(game);
 #elif WINRT
