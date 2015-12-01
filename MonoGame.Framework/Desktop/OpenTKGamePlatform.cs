@@ -120,14 +120,14 @@ namespace Microsoft.Xna.Framework
         private int isExiting; // int, so we can use Interlocked.Increment
 
         int windowDelay = 2;
+        public OpenTKGamePlatform(Game game, IEmbedContext embedContext)
         
-		public OpenTKGamePlatform(Game game)
             : base(game)
         {
             if (PlatformParameters.PreferredBackend != Backend.Default)
                 Toolkit.Init(new ToolkitOptions { Backend = PlatformBackend.PreferNative });
 
-            _view = new OpenTKGameWindow(game);
+            _view = new OpenTKGameWindow(game, embedContext);
             this.Window = _view;
 
 			// Setup our OpenALSoundController to handle our SoundBuffer pools
@@ -205,7 +205,7 @@ namespace Microsoft.Xna.Framework
 
         public override bool BeforeUpdate(GameTime gameTime)
         {
-            IsActive = _view.Window.Focused;
+            IsActive = _view.Window == null || _view.Window.Focused;
 
             // Update our OpenAL sound buffer pools
             if (soundControllerInstance != null)
@@ -243,6 +243,13 @@ namespace Microsoft.Xna.Framework
 
             var graphicsDeviceManager = (GraphicsDeviceManager)
                 Game.Services.GetService(typeof(IGraphicsDeviceManager));
+
+            if (_view.Window == null)
+            {
+                // Embedded mode.
+                graphicsDeviceManager.PreferredBackBufferWidth = bounds.Width;
+                graphicsDeviceManager.PreferredBackBufferHeight = bounds.Height;
+            }
 
             if (graphicsDeviceManager.IsFullScreen)
             {
