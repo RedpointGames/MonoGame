@@ -1095,10 +1095,10 @@
     <Compile Include="Input\KeyboardUtil.OpenTK.cs">
       <Platforms>Angle,Linux,WindowsGL</Platforms>
     </Compile>
-	 <EmbeddedResource Include="../Installers/monogame.ico">
+    <Compile Include="Desktop\IEmbedContext.cs" />
+    <EmbeddedResource Include="../Installers/monogame.ico">
       <Platforms>Angle,Linux,WindowsGL</Platforms>
     </EmbeddedResource>
-
 
     <!-- iOS Platform -->
     <Compile Include="iOS\Devices\Sensors\Accelerometer.cs">
@@ -1214,6 +1214,12 @@
       <Platforms>Windows</Platforms>
     </Compile>
     <Compile Include="Windows\WinFormsGameWindow.cs">
+      <Platforms>Windows</Platforms>
+    </Compile>
+    <Compile Include="Windows\WinEmbeddedGamePlatform.cs">
+      <Platforms>Windows</Platforms>
+    </Compile>
+    <Compile Include="Windows\WinEmbeddedGameWindow.cs">
       <Platforms>Windows</Platforms>
     </Compile>
     <Compile Include="Media\VideoSampleGrabber.cs">
