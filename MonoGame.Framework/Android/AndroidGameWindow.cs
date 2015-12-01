@@ -28,6 +28,7 @@ namespace Microsoft.Xna.Framework
 
         public override IntPtr Handle { get { return IntPtr.Zero; } }
 
+        public View GameViewAsView { get { return this.GameView; } }
 
         public void SetResumer(IResumeManager resumer)
         {
