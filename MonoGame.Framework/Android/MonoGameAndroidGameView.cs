@@ -47,6 +47,13 @@ namespace Microsoft.Xna.Framework
             }
         }
 
+        protected override void OnUpdateFrame(OpenTK.FrameEventArgs e)
+        {
+            base.OnUpdateFrame(e);
+
+            Keyboard.ApplyPendingKeyReleases();
+        }
+
         #region IOnTouchListener implementation
 
         bool IOnTouchListener.OnTouch(View v, MotionEvent e)
