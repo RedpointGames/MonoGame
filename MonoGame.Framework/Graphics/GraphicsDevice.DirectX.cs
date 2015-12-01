@@ -783,11 +783,28 @@ namespace Microsoft.Xna.Framework.Graphics
                 using (var dxgiAdapter = dxgiDevice.Adapter)
                 using (var dxgiFactory = dxgiAdapter.GetParent<SharpDX.DXGI.Factory1>())
                 {
-                    _swapChain = new SwapChain(dxgiFactory, dxgiDevice, desc);
-                    dxgiFactory.MakeWindowAssociation(PresentationParameters.DeviceWindowHandle, WindowAssociationFlags.IgnoreAll);
+                    try
+                    {
+                        _swapChain = new SwapChain(dxgiFactory, dxgiDevice, desc);
+                        dxgiFactory.MakeWindowAssociation(PresentationParameters.DeviceWindowHandle, WindowAssociationFlags.IgnoreAll);
                     // To reduce latency, ensure that DXGI does not queue more than one frame at a time.
                     // Docs: https://msdn.microsoft.com/en-us/library/windows/desktop/ff471334(v=vs.85).aspx
                     dxgiDevice.MaximumFrameLatency = 1;
+                    }
+                    catch (SharpDXException)
+                    {
+                        // If we have multisampling turned on, turn it off and try again.
+                        if (PresentationParameters.MultiSampleCount > 1)
+                        {
+                            PresentationParameters.MultiSampleCount = 0;
+                            CreateSizeDependentResources();
+                            return;
+                        }
+                        
+                        // Multisampling is turned off, rethrow exception.
+                        throw;
+                    }
+
                 }
             }
 
