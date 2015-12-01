@@ -50,6 +50,8 @@ namespace Microsoft.Xna.Framework.Input
 	{
         private static List<Keys> keys = new List<Keys>();
 
+        private static List<Keys> pendingKeys = new List<Keys>();
+
         private static readonly IDictionary<Keycode, Keys> KeyMap = LoadKeyMap();
 
         internal static void KeyDown(Keycode keyCode)
@@ -67,8 +69,19 @@ namespace Microsoft.Xna.Framework.Input
             Keys key;
             if (KeyMap.TryGetValue(keyCode, out key))
             {
+                if (keys.Contains(key) && !pendingKeys.Contains(key))
+                    pendingKeys.Add(key);
+            }
+        }
+
+        internal static void ApplyPendingKeyReleases()
+        {
+            foreach (var key in pendingKeys)
+            {
                 if (keys.Contains(key))
+                {
                     keys.Remove(key);
+                }
             }
         }
 
@@ -127,6 +140,10 @@ namespace Microsoft.Xna.Framework.Input
             maps[Keycode.Enter] = Keys.Enter;
             maps[Keycode.Period] = Keys.OemPeriod;
             maps[Keycode.Comma] = Keys.OemComma;
+            maps[Keycode.Del] = Keys.Back;
+            maps[Keycode.ShiftLeft] = Keys.LeftShift;
+            maps[Keycode.ShiftRight] = Keys.RightShift;
+            maps[Keycode.Space] = Keys.Space;
             // TODO: put in all the other mappings
             maps[Keycode.Menu] = Keys.Help;
             maps[Keycode.Search] = Keys.BrowserSearch;
