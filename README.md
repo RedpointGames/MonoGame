@@ -25,7 +25,7 @@ Our [build server](http://teamcity.monogame.net/?guest=1) builds, tests, and pac
 | Package NuGet | [![Build Status](http://teamcity.monogame.net/app/rest/builds/buildType:MonoGame_PackageNuGet/statusIcon)](http://teamcity.monogame.net/viewType.html?buildTypeId=MonoGame_PackageNuGet&guest=1) |
 | Package Mac and Linux | [![Build Status](http://teamcity.monogame.net/app/rest/builds/buildType:MonoGame_PackageMacAndLinux/statusIcon)](http://teamcity.monogame.net/viewType.html?buildTypeId=MonoGame_PackageMacAndLinux&guest=1) |
 | Package Windows | [![Build Status](http://teamcity.monogame.net/app/rest/builds/buildType:MonoGame_PackagingWindows/statusIcon)](http://teamcity.monogame.net/viewType.html?buildTypeId=MonoGame_PackagingWindows&guest=1) |
-
+| Redpoint w/ Patches | [![Build Status](https://jenkins.redpointgames.com.au/buildStatus/icon?job=MonoGame)](https://jenkins.redpointgames.com.au/job/MonoGame) |
 
 ## Supported Platforms
 
