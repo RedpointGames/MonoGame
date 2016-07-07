@@ -563,6 +563,11 @@ namespace Microsoft.Xna.Framework.Graphics
             CreateSizeDependentResources();
             ApplyRenderTargets(null);
         }
+        
+        internal void PlatformSetMultiSamplingToMaximum(PresentationParameters presentationParameters, out int quality)
+        {
+            quality = (int)SharpDX.Direct3D11.StandardMultisampleQualityLevels.StandardMultisamplePattern;
+        }
 
 #endif
 #if WINDOWS
@@ -646,6 +651,30 @@ namespace Microsoft.Xna.Framework.Graphics
             // Get Direct3D 11.1 context
             _d3dContext = _d3dDevice.ImmediateContext.QueryInterface<SharpDX.Direct3D11.DeviceContext>();
         }
+        
+        internal void PlatformSetMultiSamplingToMaximum(PresentationParameters presentationParameters, out int quality)
+        {
+            var format = presentationParameters.BackBufferFormat == SurfaceFormat.Color ?
+                               SharpDX.DXGI.Format.B8G8R8A8_UNorm :
+                               SharpDXHelper.ToFormat(presentationParameters.BackBufferFormat);
+
+            //Find the maximum supported level coming down from 32, 16, 8, 4, 2, 1, 0
+            var qualityLevels = 0;
+            var maxLevel = 32;
+            while (maxLevel > 0)
+            {
+                qualityLevels = _d3dDevice.CheckMultisampleQualityLevels(format, maxLevel);
+                if (qualityLevels > 0)
+                    break;
+                maxLevel /= 2;
+            }
+
+            // Correct the MSAA level if it is too high.
+            if (presentationParameters.MultiSampleCount > maxLevel)
+                presentationParameters.MultiSampleCount = maxLevel;
+
+            quality = qualityLevels - 1;
+        }
 
         internal void SetHardwareFullscreen()
         {
@@ -698,25 +727,11 @@ namespace Microsoft.Xna.Framework.Graphics
             var multisampleDesc = new SharpDX.DXGI.SampleDescription(1, 0);
             if (PresentationParameters.MultiSampleCount > 1)
             {
-                //Find the maximum supported level coming down from 32, 16, 8, 4, 2, 1, 0
-                var qualityLevels = 0;
-                var maxLevel = 32;
-                while (maxLevel > 0)
-                {
-                    qualityLevels = _d3dDevice.CheckMultisampleQualityLevels(format, maxLevel);
-                    if (qualityLevels > 0)
-                        break;
-                    maxLevel /= 2;
-                }
-
-                // Correct the MSAA level if it is too high.
-                if (PresentationParameters.MultiSampleCount > maxLevel)
-                    PresentationParameters.MultiSampleCount = maxLevel;
-
+                int quality;
+                PlatformSetMultiSamplingToMaximum(PresentationParameters, out quality);
+                
                 multisampleDesc.Count = PresentationParameters.MultiSampleCount;
-                // Get the quality level for the selected multisample count, which may be
-                // lower than the maximum found above.
-                multisampleDesc.Quality = _d3dDevice.CheckMultisampleQualityLevels(format, PresentationParameters.MultiSampleCount) - 1;
+                multisampleDesc.Quality = quality;
             }
 
             int vSyncFrameLatency = PresentationParameters.PresentationInterval.GetFrameLatency();
