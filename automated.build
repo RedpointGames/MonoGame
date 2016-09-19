@@ -4,7 +4,7 @@ set build-property Configuration Release
 set execute-configuration Release
 
 if host Windows
-  set target-platforms Windows,WindowsGL,Linux,Windows8,WindowsPhone,WindowsPhone81,WindowsUniversal
+  set target-platforms Windows,WindowsGL,Linux,Windows8
 endif
 if host MacOS
   set target-platforms Linux,MacOS,iOS,Android,Ouya
