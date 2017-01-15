@@ -1,6 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Module>
-  <Name>MonoGame.Framework</Name>
+  <Name>MonoGame.Framework.Redpoint</Name>
+  <Authors>Redpoint Games</Authors>
+  <SemanticVersion>3.5.0</SemanticVersion>
+  <Description>This is a modified version of MonoGame that is used in Protogame.</Description>
+  <LicenseUrl>https://github.com/MonoGame/MonoGame/blob/develop/LICENSE.txt</LicenseUrl>
+  <ProjectUrl>https://github.com/RedpointGames/MonoGame</ProjectUrl>
+  <IconUrl>https://pbs.twimg.com/profile_images/487954549441691649/O3KsHAsb_400x400.png</IconUrl>
+  <GitRepositoryUrl>https://github.com/RedpointGames/MonoGame</GitRepositoryUrl>
   <DefaultAction>Generate</DefaultAction>
   <DefaultLinuxPlatforms>Angle,Linux,WindowsGL</DefaultLinuxPlatforms>
   <DefaultMacOSPlatforms>Angle,MacOS,iOS,WindowsGL,Android,tvOS,Linux</DefaultMacOSPlatforms>
