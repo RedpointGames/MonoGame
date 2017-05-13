@@ -45,6 +45,8 @@
     <Binary Name="Eto.Forms" Path="ThirdParty\Dependencies\Eto\Eto.dll" />
     <Binary Name="Eto.XamMac2" Path="ThirdParty\Dependencies\Eto\Eto.XamMac2.dll" />
     <Binary Name="Xwt" Path="ThirdParty\Dependencies\xwt\Xwt.dll" />
+
+    <Reference Include="System.Runtime" />
   </Platform>
 
   <Platform Type="Windows">
