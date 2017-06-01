@@ -34,6 +34,12 @@ namespace Microsoft.Xna.Framework.Graphics
         protected internal bool mipmap;
         protected internal SampleDescription sampleDescription;
 
+        // Only used by RenderTarget2D from shared resource
+        protected internal Texture2D(GraphicsDevice graphicsDevice)
+        {
+            GraphicsDevice = graphicsDevice;
+        }
+
         private void PlatformConstruct(int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared)
         {
             this.shared = shared;
@@ -355,7 +361,7 @@ namespace Microsoft.Xna.Framework.Graphics
             desc.OptionFlags = ResourceOptionFlags.None;
 
             if (shared)
-                desc.OptionFlags |= ResourceOptionFlags.Shared;
+                desc.OptionFlags |= ResourceOptionFlags.SharedKeyedmutex;
 
             return desc;
         }
