@@ -4,6 +4,7 @@
 
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
+using System;
 using Resource = SharpDX.Direct3D11.Resource;
 
 namespace Microsoft.Xna.Framework.Graphics
@@ -13,10 +14,27 @@ namespace Microsoft.Xna.Framework.Graphics
         internal RenderTargetView[] _renderTargetViews;
         internal DepthStencilView _depthStencilView;
         private RenderTarget2D _resolvedTexture;
+        private IntPtr? _sharedResourceHandle;
+        private KeyedMutex _sharedResourceKeyedMutex;
+        private bool _shared;
+
+        private RenderTarget2D(GraphicsDevice graphicsDevice, IntPtr sharedResourceHandle) : base(graphicsDevice)
+        {
+            _sharedResourceHandle = sharedResourceHandle;
+
+            GenerateIfRequired();
+        }
+
+        public static RenderTarget2D FromSharedResourceHandle(GraphicsDevice graphicsDevice, IntPtr sharedResourceHandle)
+        {
+            return new RenderTarget2D(graphicsDevice, sharedResourceHandle);
+        }
 
         private void PlatformConstruct(GraphicsDevice graphicsDevice, int width, int height, bool mipMap,
             SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat, int preferredMultiSampleCount, RenderTargetUsage usage, bool shared)
         {
+            _shared = shared;
+
             GenerateIfRequired();
         }
 
@@ -25,34 +43,75 @@ namespace Microsoft.Xna.Framework.Graphics
             if (_renderTargetViews != null)
                 return;
 
-            // Create a view interface on the rendertarget to use on bind.
-            if (ArraySize > 1)
+            // If this is from a shared resource handle, create the render target views
+            // from that instead.
+            if (_sharedResourceHandle == null)
             {
-                _renderTargetViews = new RenderTargetView[ArraySize];
-                for (var i = 0; i < ArraySize; i++)
+                // Create a view interface on the rendertarget to use on bind.
+                if (ArraySize > 1)
                 {
-                    var renderTargetViewDescription = new RenderTargetViewDescription();
-                    if (GetTextureSampleDescription().Count > 1)
+                    _renderTargetViews = new RenderTargetView[ArraySize];
+                    for (var i = 0; i < ArraySize; i++)
                     {
-                        renderTargetViewDescription.Dimension = RenderTargetViewDimension.Texture2DMultisampledArray;
-                        renderTargetViewDescription.Texture2DMSArray.ArraySize = 1;
-                        renderTargetViewDescription.Texture2DMSArray.FirstArraySlice = i;
+                        var renderTargetViewDescription = new RenderTargetViewDescription();
+                        if (GetTextureSampleDescription().Count > 1)
+                        {
+                            renderTargetViewDescription.Dimension = RenderTargetViewDimension.Texture2DMultisampledArray;
+                            renderTargetViewDescription.Texture2DMSArray.ArraySize = 1;
+                            renderTargetViewDescription.Texture2DMSArray.FirstArraySlice = i;
+                        }
+                        else
+                        {
+                            renderTargetViewDescription.Dimension = RenderTargetViewDimension.Texture2DArray;
+                            renderTargetViewDescription.Texture2DArray.ArraySize = 1;
+                            renderTargetViewDescription.Texture2DArray.FirstArraySlice = i;
+                            renderTargetViewDescription.Texture2DArray.MipSlice = 0;
+                        }
+                        _renderTargetViews[i] = new RenderTargetView(
+                            GraphicsDevice._d3dDevice, GetTexture(),
+                            renderTargetViewDescription);
                     }
-                    else
-                    {
-                        renderTargetViewDescription.Dimension = RenderTargetViewDimension.Texture2DArray;
-                        renderTargetViewDescription.Texture2DArray.ArraySize = 1;
-                        renderTargetViewDescription.Texture2DArray.FirstArraySlice = i;
-                        renderTargetViewDescription.Texture2DArray.MipSlice = 0;
-                    }
-                    _renderTargetViews[i] = new RenderTargetView(
-                        GraphicsDevice._d3dDevice, GetTexture(),
-                        renderTargetViewDescription);
+                }
+                else
+                {
+                    _renderTargetViews = new[] { new RenderTargetView(GraphicsDevice._d3dDevice, GetTexture()) };
                 }
             }
             else
             {
-                _renderTargetViews = new[] { new RenderTargetView(GraphicsDevice._d3dDevice, GetTexture()) };
+                var dx11Resource = GraphicsDevice._d3dDevice.OpenSharedResource<Resource>(_sharedResourceHandle.Value);
+                var dx11Texture = dx11Resource.QueryInterface<SharpDX.Direct3D11.Texture2D>();
+
+                _sharedResourceKeyedMutex = dx11Texture.QueryInterface<KeyedMutex>();
+
+                DepthStencilFormat = DepthFormat.None;
+                MultiSampleCount = dx11Texture.Description.SampleDescription.Count;
+                RenderTargetUsage = RenderTargetUsage.PreserveContents;
+                ArraySize = 1;
+
+                _texture = dx11Texture;
+                width = dx11Texture.Description.Width;
+                height = dx11Texture.Description.Height;
+                _levelCount = dx11Texture.Description.MipLevels;
+                SampleDescription = dx11Texture.Description.SampleDescription;
+
+                _renderTargetViews = new[] { new RenderTargetView(GraphicsDevice._d3dDevice, dx11Texture) };
+
+                // MSAA RT needs another non-MSAA texture where it is resolved
+                if (dx11Texture.Description.SampleDescription.Count > 1)
+                {
+                    _resolvedTexture = new RenderTarget2D(
+                        GraphicsDevice,
+                        Width,
+                        Height,
+                        Mipmap,
+                        Format,
+                        DepthStencilFormat,
+                        1,
+                        RenderTargetUsage,
+                        Shared,
+                        ArraySize);
+                }
             }
 
             // If we don't need a depth buffer then we're done.
@@ -89,6 +148,26 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
+        public bool AcquireLock(long key, int msTimeout)
+        {
+            if (_sharedResourceKeyedMutex == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return _sharedResourceKeyedMutex.Acquire(key, msTimeout) == SharpDX.Result.Ok;
+        }
+
+        public void ReleaseLock(long key)
+        {
+            if (_sharedResourceKeyedMutex == null)
+            {
+                throw new InvalidOperationException();
+            }
+            
+            _sharedResourceKeyedMutex.Release(key);
+        }
+
         private void PlatformGraphicsDeviceResetting()
         {
             if (_renderTargetViews != null)
@@ -97,7 +176,10 @@ namespace Microsoft.Xna.Framework.Graphics
                     _renderTargetViews[i].Dispose();
                 _renderTargetViews = null;
             }
-            SharpDX.Utilities.Dispose(ref _depthStencilView);
+            if (_depthStencilView != null)
+            {
+                SharpDX.Utilities.Dispose(ref _depthStencilView);
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -110,9 +192,12 @@ namespace Microsoft.Xna.Framework.Graphics
                         _renderTargetViews[i].Dispose();
                     _renderTargetViews = null;
                 }
-                SharpDX.Utilities.Dispose(ref _depthStencilView);
+                if (_depthStencilView != null)
+                {
+                    SharpDX.Utilities.Dispose(ref _depthStencilView);
                 if (_resolvedTexture != null)
                     SharpDX.Utilities.Dispose(ref _resolvedTexture);
+                }
             }
 
             base.Dispose(disposing);
@@ -145,6 +230,11 @@ namespace Microsoft.Xna.Framework.Graphics
         internal override Resource CreateTexture()
         {
             var rt = base.CreateTexture();
+
+            if (_shared)
+            {
+                _sharedResourceKeyedMutex = rt.QueryInterface<KeyedMutex>();
+            }
 
             // MSAA RT needs another non-MSAA texture where it is resolved
             if (SampleDescription.Count > 1)

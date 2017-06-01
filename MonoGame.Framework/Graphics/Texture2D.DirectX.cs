@@ -30,15 +30,21 @@ namespace Microsoft.Xna.Framework.Graphics
 {
     public partial class Texture2D : Texture
     {
-        protected bool Shared { get { return _shared; } }
-        protected bool Mipmap { get { return _mipmap; } }
-        protected SampleDescription SampleDescription { get { return _sampleDescription; } }
+        protected bool Shared { get { return _shared; } set { _shared = value; } }
+        protected bool Mipmap { get { return _mipmap; } set { _mipmap = value; } }
+        protected SampleDescription SampleDescription { get { return _sampleDescription; } set { _sampleDescription = value; } }
 
         private bool _shared;
         private bool _mipmap;
         private SampleDescription _sampleDescription;
 
         private SharpDX.Direct3D11.Texture2D _cachedStagingTexture;
+
+        // Only used by RenderTarget2D from shared resource
+        protected internal Texture2D(GraphicsDevice graphicsDevice)
+        {
+            GraphicsDevice = graphicsDevice;
+        }
 
         private void PlatformConstruct(int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared)
         {
@@ -419,7 +425,7 @@ namespace Microsoft.Xna.Framework.Graphics
             desc.OptionFlags = ResourceOptionFlags.None;
 
             if (_shared)
-                desc.OptionFlags |= ResourceOptionFlags.Shared;
+                desc.OptionFlags |= ResourceOptionFlags.SharedKeyedmutex;
 
             return desc;
         }
