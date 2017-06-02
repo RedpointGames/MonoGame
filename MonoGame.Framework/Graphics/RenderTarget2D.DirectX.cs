@@ -148,14 +148,14 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
-        public void AcquireLock(long key, int msTimeout)
+        public bool AcquireLock(long key, int msTimeout)
         {
             if (_sharedResourceKeyedMutex == null)
             {
                 throw new InvalidOperationException();
             }
 
-            _sharedResourceKeyedMutex.Acquire(key, msTimeout);
+            return _sharedResourceKeyedMutex.Acquire(key, msTimeout) == SharpDX.Result.Ok;
         }
 
         public void ReleaseLock(long key)
