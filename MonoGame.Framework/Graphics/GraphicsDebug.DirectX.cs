@@ -8,6 +8,7 @@ namespace Microsoft.Xna.Framework.Graphics
         private readonly GraphicsDevice _device;
         private readonly InfoQueue _infoQueue;
         private readonly Queue<GraphicsDebugMessage> _cachedMessages;
+        private bool _hasPushedFilters = false;
 
         public GraphicsDebug(GraphicsDevice device)
         {
@@ -15,16 +16,27 @@ namespace Microsoft.Xna.Framework.Graphics
             _infoQueue = _device._d3dDevice.QueryInterfaceOrNull<InfoQueue>();
             _cachedMessages = new Queue<GraphicsDebugMessage>();
 
-            _infoQueue.PushEmptyRetrievalFilter();
-            _infoQueue.PushEmptyStorageFilter();
+            if (_infoQueue != null)
+            {
+                _infoQueue.PushEmptyRetrievalFilter();
+                _infoQueue.PushEmptyStorageFilter();
+                _hasPushedFilters = true;
+            }
         }
 
-        public bool TryDequeueMessage(out GraphicsDebugMessage message)
+        private bool PlatformTryDequeueMessage(out GraphicsDebugMessage message)
         {
             if (_infoQueue == null)
             {
                 message = null;
                 return false;
+            }
+
+            if (!_hasPushedFilters)
+            {
+                _infoQueue.PushEmptyRetrievalFilter();
+                _infoQueue.PushEmptyStorageFilter();
+                _hasPushedFilters = true;
             }
 
             if (_cachedMessages.Count > 0)
@@ -62,16 +74,5 @@ namespace Microsoft.Xna.Framework.Graphics
             message = null;
             return false;
         }
-    }
-
-    public partial class GraphicsDebugMessage
-    {
-        public string Severity { get; set; }
-
-        public int Id { get; set; }
-
-        public string IdName { get; set; }
-
-        public string Category { get; set; }
     }
 }
