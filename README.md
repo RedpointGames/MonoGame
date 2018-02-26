@@ -1,5 +1,7 @@
 # MonoGame
 
+## **❗❗❗ Protogame has been sunset as of 1st Jan 2018 and is no longer supported or maintained. Please read the announcement for more information: [Sunsetting Protogame](https://medium.com/redpoint/sunsetting-protogame-a18e1f03af43). ❗❗❗**
+
 One framework for creating powerful cross-platform games.  The spiritual successor to XNA with 1000's of titles shipped across desktop, mobile, and console platforms.  [MonoGame](http://www.monogame.net/) is a fully managed .NET open source game framework without any black boxes.  Create, develop and distribute your games your way.
 
 [![Join the chat at https://gitter.im/MonoGame/MonoGame](https://badges.gitter.im/MonoGame/MonoGame.svg)](https://gitter.im/MonoGame/MonoGame?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
